@@ -2,58 +2,28 @@ package com.example
 
 import scala.util.Try
 import cats.effect.{IO, IOApp, ExitCode}
-import cats.MonadError
-import cats.data.{OptionT}
 import io.quartz.QuartzH2Server
-import io.quartz.http2.routes.{HttpRouteIO, Routes}
-import io.quartz.http2.model.{Headers, Method, ContentType, Request, Response}
+import io.quartz.http2.model.Method
 import io.quartz.http2._
 import io.quartz.http2.model.Method._
-import io.quartz.http2.model.ContentType.JSON
-import io.quartz.http2.model.Request
-import io.quartz.http2.model.Response
 
 import ch.qos.logback.classic.Level
 
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
-import fs2.{Stream, Chunk, Pipe}
-
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.slf4j.Slf4jLogger
-import io.quartz.MyLogger._
-
+import sttp.tapir.json.jsoniter.jsoniterCodec
+import fs2.Pipe
 import sttp.tapir._
 import sttp.tapir.filesServerEndpoints
-
 import sttp.tapir.inputStreamRangeBody
-import sttp.tapir.generic.auto._
 import sttp.tapir.RangeValue
 import sttp.tapir.json.jsoniter.jsonBody
 import sttp.tapir.server.ServerEndpoint
-import sttp.tapir.server.interceptor.RequestResult
-import io.quartz.http2.model.StatusCode
-import sttp.tapir.integ.cats.effect.CatsMonadError
-import io.quartz.sttp.QuartzH2BodyListener
-import sttp.tapir.server.interceptor.reject.RejectInterceptor
-
-import sttp.tapir.server.interpreter.{
-  BodyListener,
-  FilterServerEndpoints,
-  ServerInterpreter
-}
-
-import io.quartz.sttp.QuartzH2RequestBody
-import io.quartz.sttp.QuartzH2Request
 import io.quartz.sttp.capabilities.fs2.Fs2IOStreams
-import io.quartz.sttp.QuartzH2ToResponseBody
-import io.quartz.sttp.QuartzH2ResponseBody
-import io.quartz.sttp.QuartzH2ServerOptions
+
 import io.quartz.sttp.QuartzH2ServerInterpreter
 import java.util.Date
 import sttp.tapir.InputStreamRange
-
-import sttp.tapir.EndpointIO.annotations.fileBody
 import sttp.model.HeaderNames
 
 case class Device(id: Int, model: String)
@@ -64,9 +34,6 @@ import sttp.model.MediaType
 
 import sttp.tapir.generic.auto._
 import java.io.File
-
-import sttp.capabilities.Streams
-import io.quartz.sttp.capabilities.fs2.Fs2IOStreams
 
 val VIDEO_FILE = "web_root/mov_bbb.mp4"
 case class MultipartForm(pic: Part[File], bytesText1: Part[Array[Byte]])
@@ -184,7 +151,7 @@ def jsonGet = {
   val user: Endpoint[Unit, Unit, String, User, Any] =
     endpoint.get.in("user").errorOut(stringBody).out(jsonBody[User])
   user.serverLogic(Unit =>
-    IO(Right(new User("OLAF", Array(new Device(15, "bb")))))
+    IO(Right(new User("OLAF", Seq(new Device(15, "bb")))))
   )
 }
 
@@ -198,9 +165,6 @@ def jsonPost = {
 
   user_post
 }
-
-import sttp.tapir.Codec.binaryWebSocketFrame
-import sttp.tapir.json.jsoniter.jsoniterCodec
 
 /** Websocket Pipe for tapir
   */
