@@ -20,3 +20,9 @@ lazy val root = (project in file(".")).settings(
     "com.softwaremill.sttp.tapir" %% "tapir-jsoniter-scala" % "1.10.5"
   )
 )
+
+scalacOptions ++= Seq(
+  "-deprecation",
+  "-feature",
+  "-Wunused:all"
+)
